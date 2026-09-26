@@ -1,0 +1,28 @@
+name: Drain durable action jobs
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: production-worker
+  cancel-in-progress: false
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Invoke protected worker
+        env:
+          APP_WORKER_URL: ${{ secrets.APP_WORKER_URL }}
+          WORKER_SECRET: ${{ secrets.WORKER_SECRET }}
+        run: >-
+          curl --fail --silent --show-error
+          --retry 2 --retry-all-errors
+          --max-time 60
+          -H "Authorization: Bearer ${WORKER_SECRET}"
+          -X POST "${APP_WORKER_URL}/api/worker"
