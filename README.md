@@ -2,6 +2,8 @@
 
 Hookwise is a deployable SaaS application that turns signed GitHub webhook deliveries into reliable repository automation. A user signs in with GitHub, installs the GitHub App on selected repositories, creates deterministic rules, and can add labels, post comments, notify Slack, or request optional Gemini triage when issues and pull requests change.
 
+The hosted evaluation instance is available at [github-event-automator.vercel.app](https://github-event-automator.vercel.app); deployment-specific integrations still require the environment configuration documented below.
+
 This is not a synchronous webhook demo. It validates the exact request bytes, persists the delivery and action outbox transactionally, acknowledges GitHub, and executes each action as an independently retryable job. The dashboard exposes deliveries, duplicate observations, matched rules, attempts, failures, retry timing, and AI results.
 
 The application is a modular Next.js monolith. It needs no paid service: Vercel Hobby (web), Neon or Supabase free Postgres, GitHub Actions (five-minute recovery scheduler for this public repository), Slack Incoming Webhooks, and optional Gemini all have free paths.
@@ -104,7 +106,7 @@ curl -X POST -H "Authorization: Bearer $WORKER_SECRET" http://localhost:3000/api
 | `GITHUB_WEBHOOK_SECRET` | Yes | Random secret configured identically in GitHub App webhook settings. |
 | `SLACK_WEBHOOK_URL` | For Slack rules | Slack Incoming Webhook URL. It remains server-only and is redacted from logs. |
 | `GEMINI_API_KEY` | No | Google AI Studio free-tier key. Missing configuration skips AI jobs without blocking other actions. |
-| `GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash-lite`; keep configurable as model availability changes. |
+| `GEMINI_MODEL` | No | Defaults to `gemini-3.5-flash-lite`; keep configurable as model availability changes. |
 | `APP_URL` | Yes | Canonical origin, for example `https://hookwise.example.com`, without a trailing slash. |
 | `WORKER_SECRET` | Yes | Long random Bearer secret for `/api/worker` and the GitHub Actions scheduler. |
 | `CRON_SECRET` | No | Alternative accepted Bearer secret for a hosting scheduler. |
@@ -123,7 +125,7 @@ Create one GitHub App under **Settings → Developer settings → GitHub Apps �
 - Webhook URL: `${APP_URL}/api/github/webhook`
 - Webhook secret: the value of `GITHUB_WEBHOOK_SECRET`
 - Do **not** enable “Request user authorization during installation”; sign-in happens explicitly before installation, preserving the setup URL flow.
-- Repository permissions: Metadata read, Issues read/write, Pull requests read, and Contents read.
+- Repository permissions: Metadata read, Issues read/write, Pull requests read/write, and Contents read. Pull-request write access is required for comment and label actions on pull requests.
 - Subscribe to events: **Issues**, **Pull request**, and **Push**.
 
 Generate a private key, put its PEM in `GITHUB_APP_PRIVATE_KEY`, and copy the App ID, slug, client ID, and client secret. A user first signs in, then uses **Repositories → Install or configure GitHub App**. The application adds an HTTP-only state value to the install URL, verifies it on return, and asks GitHub whether the signed-in GitHub App user token can access that installation before saving it. The token is AES-256-GCM encrypted under `AUTH_SECRET`; installation tokens are minted on demand and never persisted.

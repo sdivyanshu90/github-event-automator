@@ -33,7 +33,7 @@ export class GeminiClient {
   async triage(event: NormalizedEvent): Promise<AITriageResult> {
     const apiKey = optionalEnv("GEMINI_API_KEY");
     if (!apiKey) throw new ConfigurationError("GEMINI_API_KEY is not configured");
-    const model = optionalEnv("GEMINI_MODEL") ?? "gemini-2.5-flash-lite";
+    const model = optionalEnv("GEMINI_MODEL") ?? "gemini-3.5-flash-lite";
     let response: Response;
     try {
       response = await this.fetcher(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
