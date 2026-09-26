@@ -26,7 +26,9 @@ interface InstallationRepositoriesResponse {
   }>;
 }
 
-interface UserInstallationResponse { id: number }
+interface UserInstallationsResponse {
+  installations: Array<{ id: number }>;
+}
 
 export interface InstallationRepository {
   githubId: string;
@@ -104,12 +106,22 @@ export class GitHubClient {
   }
 
   async verifyUserInstallation(userToken: string, installationId: string): Promise<void> {
-    const installation = await this.request<UserInstallationResponse>(`/user/installations/${encodeURIComponent(installationId)}`, {
-      headers: { Authorization: `Bearer ${userToken}` },
-    });
-    if (String(installation.id) !== installationId) {
-      throw new ProviderError("GitHub returned a different installation", "GITHUB_API", false, 403, "The installation is not available to the signed-in GitHub user");
+    // GitHub does not expose GET /user/installations/{id}. Enumerate the
+    // installations accessible to this user token and compare immutable IDs.
+    for (let page = 1; page <= 100; page += 1) {
+      const response = await this.request<UserInstallationsResponse>(`/user/installations?per_page=100&page=${page}`, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      if (response.installations.some((installation) => String(installation.id) === installationId)) return;
+      if (response.installations.length < 100) break;
     }
+    throw new ProviderError(
+      "GitHub user token cannot access the requested installation",
+      "GITHUB_API",
+      false,
+      403,
+      "The installation is not available to the signed-in GitHub user",
+    );
   }
 
   async addLabel(installationId: string, owner: string, repository: string, issueNumber: number, label: string): Promise<void> {

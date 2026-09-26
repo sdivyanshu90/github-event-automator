@@ -4,7 +4,8 @@ import { database } from "@/db";
 import { users } from "@/db/schema";
 import { currentUser } from "@/lib/auth";
 import { decryptSecret } from "@/lib/crypto";
-import { AppError } from "@/lib/errors";
+import { AppError, errorDetails } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { synchronizeInstallation } from "@/services/installations";
 import { validInstallationState } from "@/services/install-state";
 
@@ -30,6 +31,15 @@ export async function GET(request: Request) {
     response.cookies.delete("github_install_state");
     return response;
   } catch (error) {
+    const details = errorDetails(error);
+    logger.error("GitHub installation synchronization failed", {
+      installationId,
+      userId: user.id,
+      errorCode: details.code,
+      retryable: details.retryable,
+      status: error instanceof AppError ? error.status : 500,
+      error: error instanceof Error ? error.message : details.safeMessage,
+    });
     const reason = error instanceof AppError ? error.code.toLowerCase() : "sync-failed";
     const response = NextResponse.redirect(new URL(`/dashboard/repositories?error=${encodeURIComponent(reason)}`, url.origin));
     response.cookies.delete("github_install_state");

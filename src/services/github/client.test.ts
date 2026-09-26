@@ -6,13 +6,23 @@ describe("GitHub action adapter", () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       void input;
       void init;
-      return new Response(JSON.stringify({ id: 10 }), { status: 200 });
+      return new Response(JSON.stringify({ installations: [{ id: 10 }] }), { status: 200 });
     });
     const client = new GitHubClient(fetcher as typeof fetch);
     await client.verifyUserInstallation("user-token", "10");
     const [url, init] = fetcher.mock.calls[0]!;
-    expect(url).toBe("https://api.github.com/user/installations/10");
+    expect(url).toBe("https://api.github.com/user/installations?per_page=100&page=1");
     expect(init?.headers).toMatchObject({ Authorization: "Bearer user-token" });
+  });
+
+  it("rejects an installation that is not available to the signed-in user", async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ installations: [{ id: 11 }] }), { status: 200 }));
+    const client = new GitHubClient(fetcher as typeof fetch);
+    await expect(client.verifyUserInstallation("user-token", "10")).rejects.toMatchObject({
+      code: "GITHUB_API",
+      retryable: false,
+      status: 403,
+    });
   });
 
   it("uses installation authentication and the issue labels endpoint", async () => {
