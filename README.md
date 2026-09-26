@@ -2,6 +2,8 @@
 
 Hookwise is a deployable SaaS application that turns signed GitHub webhook deliveries into reliable repository automation. A user signs in with GitHub, installs the GitHub App on selected repositories, creates deterministic rules, and can add labels, post comments, notify Slack, or request optional Gemini triage when issues and pull requests change.
 
+The hosted evaluation instance is available at [github-event-automator.vercel.app](https://github-event-automator.vercel.app); deployment-specific integrations still require the environment configuration documented below.
+
 This is not a synchronous webhook demo. It validates the exact request bytes, persists the delivery and action outbox transactionally, acknowledges GitHub, and executes each action as an independently retryable job. The dashboard exposes deliveries, duplicate observations, matched rules, attempts, failures, retry timing, and AI results.
 
 The application is a modular Next.js monolith. It needs no paid service: Vercel Hobby (web), Neon or Supabase free Postgres, GitHub Actions (five-minute recovery scheduler for this public repository), Slack Incoming Webhooks, and optional Gemini all have free paths.
