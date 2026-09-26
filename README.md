@@ -106,7 +106,7 @@ curl -X POST -H "Authorization: Bearer $WORKER_SECRET" http://localhost:3000/api
 | `GITHUB_WEBHOOK_SECRET` | Yes | Random secret configured identically in GitHub App webhook settings. |
 | `SLACK_WEBHOOK_URL` | For Slack rules | Slack Incoming Webhook URL. It remains server-only and is redacted from logs. |
 | `GEMINI_API_KEY` | No | Google AI Studio free-tier key. Missing configuration skips AI jobs without blocking other actions. |
-| `GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash-lite`; keep configurable as model availability changes. |
+| `GEMINI_MODEL` | No | Defaults to `gemini-3.5-flash-lite`; keep configurable as model availability changes. |
 | `APP_URL` | Yes | Canonical origin, for example `https://hookwise.example.com`, without a trailing slash. |
 | `WORKER_SECRET` | Yes | Long random Bearer secret for `/api/worker` and the GitHub Actions scheduler. |
 | `CRON_SECRET` | No | Alternative accepted Bearer secret for a hosting scheduler. |
