@@ -125,7 +125,7 @@ Create one GitHub App under **Settings → Developer settings → GitHub Apps �
 - Webhook URL: `${APP_URL}/api/github/webhook`
 - Webhook secret: the value of `GITHUB_WEBHOOK_SECRET`
 - Do **not** enable “Request user authorization during installation”; sign-in happens explicitly before installation, preserving the setup URL flow.
-- Repository permissions: Metadata read, Issues read/write, Pull requests read, and Contents read.
+- Repository permissions: Metadata read, Issues read/write, Pull requests read/write, and Contents read. Pull-request write access is required for comment and label actions on pull requests.
 - Subscribe to events: **Issues**, **Pull request**, and **Push**.
 
 Generate a private key, put its PEM in `GITHUB_APP_PRIVATE_KEY`, and copy the App ID, slug, client ID, and client secret. A user first signs in, then uses **Repositories → Install or configure GitHub App**. The application adds an HTTP-only state value to the install URL, verifies it on return, and asks GitHub whether the signed-in GitHub App user token can access that installation before saving it. The token is AES-256-GCM encrypted under `AUTH_SECRET`; installation tokens are minted on demand and never persisted.
